@@ -1,0 +1,15 @@
+.idea/*
+*.key
+*.m4v
+*.m4a
+*.png
+*.pdf
+*.tiff
+*.wav
+*.mov
+*.jpeg
+*.jpg
+*.svg
+*.fcpbundle
+*.heic
+.DS_Store
