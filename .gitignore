@@ -13,6 +13,6 @@
 *.fcpbundle
 *.heic
 .DS_Store
-.Rproj
+*.Rproj
 .Rproj.user
 .Rhistory
