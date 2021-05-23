@@ -1,0 +1,132 @@
+import numpy as np
+import pandas as pd
+
+#=== Challenge ============================================================================================
+
+class Perceptron():
+    """
+    Perceptron that supports multiclass classification via one-vs-rest
+    and unseparable classes via the pocket algorithm
+    """
+
+    def __init__(self, W = None, y_classes = None):
+        """
+        Optionally initialize this perceptron with an array of weights and an array of target classes
+
+        :param W: 2-D array where column k is the weight vector associated with class k
+        :param y_classes: 1-D array of y classes
+        """
+
+        self.W = W
+        self.y_classes = y_classes
+
+    def fit(self, X, y, MAXUPDATES=1000, seed=None, verbose=False):
+        """
+        Fit perceptron on X, y using one-vs-rest and the pocket algorithm
+        y should have 2 or more distinct classes
+
+        :param X: 2-D array with >= 1 column of real-valued features
+        :param y: 1-D array of labels; should have two distinct classes
+        :param MAXUPDATES: how many weight updates to make before quitting, for each submodel
+        :param seed: optional random seed
+        :param verbose: print progress?
+        :return: None; set self.y_classes and self.W
+        """
+
+        # Validate X dimensionality
+        if X.ndim != 2:
+            raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
+
+        # Determine/validate y_classes
+        y_classes = np.unique(y)
+        if len(y_classes) < 2:
+            AssertionError("y should have at least 2 distinct classes")
+
+        # Initialize generator, X1, W
+        gen = np.random.default_rng(seed)
+        X1 = np.insert(X, X.shape[1], 1, axis=1)
+        W = np.full(shape=(X1.shape[1], len(y_classes)), fill_value=np.nan)
+
+        # Build a binary model for each class in y_classes
+        for k in range(len(y_classes)):
+            if verbose:
+                print(f"Training binary classifier {k + 1} of {len(y_classes)}: '{y_classes[k]} vs not {y_classes[k]}'")
+
+            # Initialize parameters for this submodel
+            yk = (y == y_classes[k]).astype('int64')
+            w_current = np.repeat(0, X1.shape[1])
+            w_pocket = np.repeat(0, X1.shape[1])
+            accuracy_current = 0
+            accuracy_pocket = 0
+
+            # Iterate
+            for i in range(MAXUPDATES):
+                yhat = (np.sign(X1.dot(w_current)) + 1) / 2
+                accuracy_current = np.mean(yhat == yk)
+                if accuracy_current == 1:
+                    w_pocket = w_current
+                    accuracy_pocket = accuracy_current
+                    break
+                elif accuracy_current > accuracy_pocket:
+                    w_pocket = w_current
+                    accuracy_pocket = accuracy_current
+
+                # Identify a random misclassified training sample and use it to update w_current
+                missclassified_idxs = np.nonzero(yhat != yk)[0]
+                p = gen.choice(missclassified_idxs, size=1)[0]
+                w_current = w_current + (X1[p] if yk[p] == 1 else -X1[p])
+
+            # Output progress
+            if verbose:
+                print(f'Best hyperplane found for {y_classes[k]} after {i+1} iterations | acurracy: {accuracy_pocket}')
+
+            # Update column k of W matrix
+            W[:, k] = w_pocket
+
+        # Update self.w, self.y_classes
+        self.W = W
+        self.y_classes = y_classes
+
+    def predict(self, X):
+        """
+        Predict on X using this object's W.
+        Use one-vs-rest method to resolve binary predictions (A vs not A, B vs not B, ...)
+        to a multiclass prediction.
+
+        :param X: 2-D array with >= 1 column of real-valued features
+        :return: 1-D array of predicted class labels
+        """
+
+        if self.W is None:
+            raise AssertionError(f"Need to fit() a before predict()")
+        if X.ndim != 2:
+            raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
+        if X.shape[1] != len(self.W) - 1:
+            raise AssertionError(f"Perceptron was fit on X with {len(self.W) - 1} columns but this X has {X.shape[1]} columns")
+
+        X1 = np.insert(X, X.shape[1], 1, axis=1)
+        Yhat = (X1.dot(self.W) > 0).astype('int64')
+        W_norms = np.sqrt(np.sum(self.W ** 2, axis=0))
+        signed_dists = Yhat / W_norms
+        yhat = np.argmax(signed_dists, axis=1)
+        preds = self.y_classes[yhat]
+
+        return preds
+
+#=== Test ============================================================================================
+
+### MNIST
+mnist_train = pd.read_csv('https://raw.githubusercontent.com/ben519/nnets-for-your-dog/master/data/mnist_train.csv')
+mnist_test = pd.read_csv('https://raw.githubusercontent.com/ben519/nnets-for-your-dog/master/data/mnist_test.csv')
+p = Perceptron()
+p.fit(
+    X = mnist_train.drop(columns='label').to_numpy(),
+    y = mnist_train.label.to_numpy(),
+    MAXUPDATES = 100,
+    seed = 2021,
+    verbose = True
+)
+
+# Predict and score on mnist_test
+test_preds = p.predict(X = mnist_test.drop(columns='label').to_numpy())
+np.mean(test_preds == mnist_test.label.to_numpy())

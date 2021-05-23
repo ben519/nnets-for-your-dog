@@ -66,6 +66,52 @@ def guess_hyperplane(X, y, MAXGUESSES=100_000):
     ### YOUR CODE HERE ###
     pass
 
+def guess_hyperplane(X, y, MAXGUESSES=100_000):
+    """
+    Given a dataset of features X and binary labels y which we assume to be linearly separable,
+    guess random hyperplanes until we get one that separates the data.
+
+    :param X: 2-D array with >= 1 column of features
+    :param y: 1-D array of labels in {0, 1}
+    :param MAXGUESSES: how many times to guess before we give up
+    :return: tuple of (w, b) where w is a 1-D array of weights and b is an offset
+    """
+
+    # Set up a random number generator
+    gen = np.random.default_rng()
+
+    # In order to guess hyperplanes that have a reasonable chance of separating the data, we
+    # 1) Guess random weights in the range [-1000, 1000]
+    # 2) Identify a bounding box around the data in X
+    # 3) Pick a random point P in the bounding box
+    # 4) Calculate b such that the hyper-plane goes passes through it
+
+    # Repeat until we either find a separating hyperplane or we're tired of guessing
+    for i in range(MAXGUESSES):
+        # Determine X bounds (bounding box)
+        X_mins = X.min(axis=0)
+        X_maxs = X.max(axis=0)
+
+        # Guess weights
+        w = gen.uniform(low=-1000, high=1000, size=X.shape[1])
+
+        # Calculate b such that hyperplane goes through a random point inside X's bounding box
+        P = gen.uniform(low=X_mins, high=X_maxs)
+        b = -P.dot(w)
+
+        # Check if the hyperplane separates the data
+        yhat = np.sign(X.dot(w) + b)
+        yhat = (yhat + 1) / 2  # transform (1, 0, -1) -> (1, 0.5, 0)
+        if (np.all(yhat == y)):
+            break
+
+    # Check outcome based on i
+    if i == (MAXGUESSES - 1):
+        print("Out of guesses. Maybe this data isn't linearly separable..?")
+        return None
+    else:
+        print(f"Found a separating hyperplane in {i + 1} guesses!")
+        return (w, b)
 
 #=== Test ============================================================================================
 
