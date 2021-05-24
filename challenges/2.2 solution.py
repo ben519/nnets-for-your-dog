@@ -57,20 +57,6 @@ def guess_hyperplane(X, y, MAXGUESSES=100_000):
     Given a dataset of features X and binary labels y which we assume to be linearly separable,
     guess random hyperplanes until we get one that separates the data.
 
-    :param X: 2-D array with >= 1 column of real-valued features
-    :param y: 1-D array of labels in {0, 1}
-    :param MAXGUESSES: how many times to guess before we give up
-    :return: tuple of (w, b) where w is a 1-D array of weights and b is an offset
-    """
-
-    ### YOUR CODE HERE ###
-    pass
-
-def guess_hyperplane(X, y, MAXGUESSES=100_000):
-    """
-    Given a dataset of features X and binary labels y which we assume to be linearly separable,
-    guess random hyperplanes until we get one that separates the data.
-
     :param X: 2-D array with >= 1 column of features
     :param y: 1-D array of labels in {0, 1}
     :param MAXGUESSES: how many times to guess before we give up
