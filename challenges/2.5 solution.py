@@ -105,9 +105,7 @@ class Perceptron():
             raise AssertionError(f"Perceptron was fit on X with {len(self.W) - 1} columns but this X has {X.shape[1]} columns")
 
         X1 = np.insert(X, X.shape[1], 1, axis=1)
-        Yhat = (X1.dot(self.W) > 0).astype('int64')
-        W_norms = np.sqrt(np.sum(self.W ** 2, axis=0))
-        signed_dists = Yhat / W_norms
+        signed_dists = X1.dot(self.W) / np.sqrt(np.sum(self.W ** 2, axis=0))
         yhat = np.argmax(signed_dists, axis=1)
         preds = self.y_classes[yhat]
 
