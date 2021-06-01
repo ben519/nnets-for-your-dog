@@ -95,8 +95,13 @@ class Perceptron():
 
         # Iterate
         for i in range(MAXUPDATES):
+
+            # Determine yhat for every sample, based on w_current and measure accuracy
             yhat = (np.sign(X1.dot(w_current)) + 1)/2
             accuracy_current = np.mean(yhat == y01)
+
+            # If the accuracy_current is 1, set w_pocket = w_current and break out of this loop
+            # If the accuracy_current is better than accuracy_pocket, update w_pocket
             if accuracy_current == 1:
                 w_pocket = w_current
                 accuracy_pocket = accuracy_current
@@ -116,6 +121,7 @@ class Perceptron():
 
         # Update class properties
         self.w = w_pocket
+        self.y_classes = y_classes
 
     def predict(self, X):
         """
