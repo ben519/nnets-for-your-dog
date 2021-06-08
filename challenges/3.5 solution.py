@@ -70,19 +70,18 @@ def logistic(x):
 
 class NNet():
     """
-    NNet with multiclass support
+    NNet with support for multiple hidden layers
     """
 
-    def __init__(self, W1=None, W2=None, y_classes=None):
+    def __init__(self, Ws=None, y_classes=None):
         """
         Initialization
 
-        :param W1: optional weight matrix, W1 (2-D numpy array)
-        :param W2: optional weight matrix, W2 (2-D numpy array)
+        :param Ws: optional list of weight matrices (list of 2-D numpy arrays)
         :param y_classes: optional array of y_classes (1-D numpy array with >= 2 elements)
         """
-        self.W1 = W1
-        self.W2 = W2
+
+        self.Ws = Ws
         self.y_classes = y_classes
 
     def fit(self, X, y, hiddenNodes, stepSize=0.01, ITERS=100, seed=None):
@@ -90,8 +89,8 @@ class NNet():
         Find the best weights via gradient descent
 
         :param X: training features
-        :param y: training labels
-        :param hiddenNodes: How many hidden layer nodes to use, excluding bias node
+        :param y: training labels. 1-d array with >= 2 classes
+        :param hiddenNodes: list indicating how many nodes to use in each hidden layer, excluding bias nodes
         :param stepSize: AKA "learning rate" AKA "alpha" used in gradient descent
         :param ITERS: How many gradient descent steps to make?
         :return: None. Update self.y_classes, self.W1, self.W2
@@ -101,12 +100,63 @@ class NNet():
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
 
+        # Validate W type
+        if not isinstance(hiddenNodes, list):
+            AssertionError("hiddenNodes should be a list of integers")
+
         # Determine unique y classes
         y01, y_classes = one_hot(y)
         if len(y_classes) < 2:
             AssertionError(f"y should have 2 at least 2 distinct classes, but instead it has {len(y_classes)}")
 
-        pass
+        # Initialization (note Ws is a list of weight matrices)
+        gen = np.random.default_rng(seed)
+        X1 = np.insert(X / 255, obj=X.shape[1], values=1, axis=1)
+        Ws = [None] * (len(hiddenNodes) + 1)
+        Ws[0] = gen.uniform(low=-1, high=1, size=(X1.shape[1], hiddenNodes[0]))
+        for i in range(1, len(hiddenNodes)):
+            Ws[i] = gen.uniform(low=-1, high=1, size=(hiddenNodes[i-1] + 1, hiddenNodes[i]))
+        Ws[i+1] = gen.uniform(low=-1, high=1, size=(hiddenNodes[i] + 1, len(y_classes)))
+
+        # Initialize lists to store Xs, Zs, and gradients
+        Zs = [None] * len(Ws)
+        Xs = [None] * len(Ws)
+        gradWs = [None] * len(Ws)
+        Xs[0] = X1
+
+        # Gradient Descent
+        for i in range(ITERS):
+
+            # Make predictions (forward pass)
+            for j in range(len(Ws)):
+                Zs[j] = Xs[j] @ Ws[j]
+                if j+1 < len(Xs):
+                    Xs[j+1] = np.insert(logistic(Zs[j]), obj=Zs[j].shape[1], values=1, axis=1)
+            yhat_probs = softmax(Zs[-1])
+            yhat_classes = y_classes[np.argmax(yhat_probs, axis=1)]
+
+            # Calculate cross entropy loss, accuracy
+            ce = cross_entropy(yhat_probs, y01)
+            CE = np.mean(ce)
+            accuracy = np.mean(yhat_classes == y)
+            if i % 100 == 0:
+                print(f'iteration: {i}, cross entropy loss: {CE}, accuracy: {accuracy}')
+
+            # Calculate gradients (backward pass)
+            gradZ = (yhat_probs - y01)[:, None, :]
+            for j in range(len(Ws) - 1, -1, -1):
+                gradWs[j] = np.transpose(Xs[j][:, None, :], axes=[0, 2, 1]) @ gradZ
+                gradWs[j] = gradWs[j].mean(axis=0)
+                gradX = (gradZ @ np.transpose(Ws[j]))[:, :, :-1]
+                gradZ = gradX * (Xs[j] * (1 - Xs[j]))[:, None, :-1]
+
+            # Update weights (gradient step)
+            for j in range(len(Ws)):
+                Ws[j] -= gradWs[j] * stepSize
+
+        # Update class vars
+        self.y_classes = y_classes
+        self.Ws = Ws
 
     def predict(self, X, type='probs'):
         """
@@ -116,15 +166,26 @@ class NNet():
         :return: if type = 'probs' then probabilities else if type = 'classes' then classes
         """
 
-        if self.W1 is None:
+        if self.Ws is None:
             raise AssertionError(f"Need to fit() a before predict()")
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
-        if X.shape[1] != len(self.W1) - 1:
-            raise AssertionError(f"Perceptron was fit on X with {len(self.W1) - 1} columns but this X has {X.shape[1]} columns")
+        if X.shape[1] != len(self.Ws[0]) - 1:
+            raise AssertionError(f"Perceptron was fit on X with {len(self.Ws[0]) - 1} columns but this X has {X.shape[1]} columns")
 
         # Make predictions (forward pass)
-        pass
+        X1 = np.insert(X / 255, obj=X.shape[1], values=1, axis=1)
+        for j in range(len(self.Ws)):
+            Z = X1 @ self.Ws[j]
+            if j < len(self.Ws) - 1:
+                X1 = np.insert(logistic(Z), obj=Z.shape[1], values=1, axis=1)
+        yhat_probs = softmax(Z)
+
+        if type == 'probs':
+            return yhat_probs
+        elif type == 'classes':
+            yhat_classes = self.y_classes[np.argmax(yhat_probs, axis=1)]
+            return yhat_classes
 
 #=== Test ============================================================================================
 
@@ -137,7 +198,7 @@ nn = NNet()
 nn.fit(
     X = train.drop(columns='label').to_numpy(),
     y = train.label.to_numpy(),
-    hiddenNodes = 4,
+    hiddenNodes = [5,3,4],
     stepSize = 0.3,
     ITERS = 10_000,
     seed = 0

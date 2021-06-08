@@ -70,19 +70,18 @@ def logistic(x):
 
 class NNet():
     """
-    NNet with multiclass support
+    NNet with support for multiple hidden layers
     """
 
-    def __init__(self, W1=None, W2=None, y_classes=None):
+    def __init__(self, Ws=None, y_classes=None):
         """
         Initialization
 
-        :param W1: optional weight matrix, W1 (2-D numpy array)
-        :param W2: optional weight matrix, W2 (2-D numpy array)
+        :param Ws: optional list of weight matrices (list of 2-D numpy arrays)
         :param y_classes: optional array of y_classes (1-D numpy array with >= 2 elements)
         """
-        self.W1 = W1
-        self.W2 = W2
+
+        self.Ws = Ws
         self.y_classes = y_classes
 
     def fit(self, X, y, hiddenNodes, stepSize=0.01, ITERS=100, seed=None):
@@ -90,8 +89,8 @@ class NNet():
         Find the best weights via gradient descent
 
         :param X: training features
-        :param y: training labels
-        :param hiddenNodes: How many hidden layer nodes to use, excluding bias node
+        :param y: training labels. 1-d array with >= 2 classes
+        :param hiddenNodes: list indicating how many nodes to use in each hidden layer, excluding bias nodes
         :param stepSize: AKA "learning rate" AKA "alpha" used in gradient descent
         :param ITERS: How many gradient descent steps to make?
         :return: None. Update self.y_classes, self.W1, self.W2
@@ -100,6 +99,10 @@ class NNet():
         # Validate X dimensionality
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
+
+        # Validate W type
+        if not isinstance(hiddenNodes, list):
+            AssertionError("hiddenNodes should be a list of integers")
 
         # Determine unique y classes
         y01, y_classes = one_hot(y)
@@ -116,12 +119,12 @@ class NNet():
         :return: if type = 'probs' then probabilities else if type = 'classes' then classes
         """
 
-        if self.W1 is None:
+        if self.Ws is None:
             raise AssertionError(f"Need to fit() a before predict()")
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
-        if X.shape[1] != len(self.W1) - 1:
-            raise AssertionError(f"Perceptron was fit on X with {len(self.W1) - 1} columns but this X has {X.shape[1]} columns")
+        if X.shape[1] != len(self.Ws[0]) - 1:
+            raise AssertionError(f"Perceptron was fit on X with {len(self.Ws[0]) - 1} columns but this X has {X.shape[1]} columns")
 
         # Make predictions (forward pass)
         pass
@@ -137,7 +140,7 @@ nn = NNet()
 nn.fit(
     X = train.drop(columns='label').to_numpy(),
     y = train.label.to_numpy(),
-    hiddenNodes = 4,
+    hiddenNodes = [5,3,4],
     stepSize = 0.3,
     ITERS = 10_000,
     seed = 0
