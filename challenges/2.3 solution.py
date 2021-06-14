@@ -88,7 +88,7 @@ class Perceptron():
         """
 
         if self.w is None:
-            raise AssertionError(f"Need to fit() a before predict()")
+            raise AssertionError(f"Need to fit() before predict()")
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
         if X.shape[1] != len(self.w) - 1:
