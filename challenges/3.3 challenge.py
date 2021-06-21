@@ -74,7 +74,7 @@ class NNet():
 
         pass
 
-    def predict(self, X, type='probs'):
+    def predict(self, X, type='classes'):
         """
         Predict on X
 

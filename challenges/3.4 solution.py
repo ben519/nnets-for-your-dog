@@ -147,7 +147,7 @@ class NNet():
         self.W1 = W1
         self.W2 = W2
 
-    def predict(self, X, type='probs'):
+    def predict(self, X, type='classes'):
         """
         Predict on X
 
@@ -192,5 +192,5 @@ nn.fit(
 )
 
 # Evaluate on test data
-preds = nn.predict(X = test.drop(columns='label').to_numpy(), type='classes')
+preds = nn.predict(X = test.drop(columns='label').to_numpy())
 (preds == test.label).mean()

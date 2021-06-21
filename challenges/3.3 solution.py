@@ -130,7 +130,7 @@ class NNet():
         self.W1 = W1
         self.W2 = W2
 
-    def predict(self, X, type='probs'):
+    def predict(self, X, type='classes'):
         """
         Predict on X
 
