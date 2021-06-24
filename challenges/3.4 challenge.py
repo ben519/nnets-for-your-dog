@@ -104,7 +104,7 @@ class NNet():
         # Determine unique y classes
         y01, y_classes = one_hot(y)
         if len(y_classes) < 2:
-            AssertionError(f"y should have 2 at least 2 distinct classes, but instead it has {len(y_classes)}")
+            AssertionError(f"y should have at least 2 distinct classes, but instead it has {len(y_classes)}")
 
         pass
 

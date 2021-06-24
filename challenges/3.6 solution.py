@@ -101,14 +101,14 @@ class NNet():
         if X.ndim != 2:
             raise AssertionError(f"X should have 2 dimensions but it has {X.ndim}")
 
-        # Validate W type
+        # Validate hiddenNodes type
         if not isinstance(hiddenNodes, list):
             AssertionError("hiddenNodes should be a list of integers")
 
         # Determine unique y classes
         y01, y_classes = one_hot(y)
         if len(y_classes) < 2:
-            AssertionError(f"y should have 2 at least 2 distinct classes, but instead it has {len(y_classes)}")
+            AssertionError(f"y should have at least 2 distinct classes, but instead it has {len(y_classes)}")
 
         # Initialization (note Ws is a list of weight matrices)
         gen = np.random.default_rng(seed)
