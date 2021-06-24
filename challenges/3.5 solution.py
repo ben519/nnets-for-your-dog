@@ -70,7 +70,7 @@ def logistic(x):
 
 class NNet():
     """
-    NNet with support for multiple hidden layers
+    NNet with support for multiple hidden layers (deep learning)
     """
 
     def __init__(self, Ws=None, y_classes=None):
