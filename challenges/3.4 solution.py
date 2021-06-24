@@ -7,7 +7,7 @@ def softmax(x):
     """
     Calculate row-wise softmax
 
-    :param x: 2d array
+    :param x: 2d array where (i,j) gives the jth input value for the ith sample
     :return: 2d array with the same shape as the input, with softmax applied to each row-vector
              As a result, the elements in each row can be interpretted as probabilities that sum to one
     """
