@@ -94,7 +94,7 @@ class NNet():
         :param stepSize: AKA "learning rate" AKA "alpha" used in gradient descent
         :param ITERS: How many gradient descent steps to make?
         :param batchSize: How many samples to user per batch? If None, use all samples
-        :return: None. Update self.y_classes, self.W1, self.W2
+        :return: None. Update self.y_classes, self.Ws
         """
 
         # Validate X dimensionality
