@@ -218,7 +218,7 @@ nn.fit(
     stepSize = 0.3,
     ITERS = 10_000,
     batchSize = 100,
-    seed = 123
+    seed = 0
 )
 
 # Evaluate on test data
